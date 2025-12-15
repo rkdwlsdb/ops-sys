@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>One-Click Response System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+    }
+
+    /* 헤더 */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border: none;
+      background: #f1f5f9;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .tab:hover {
+      background: #e2e8f0;
+    }
+
+    .tab.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    /* 메인 */
+    .main {
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+
+    /* 탭 컨텐츠 */
+    .tab-content {
+      display: none;
+      height: 100%;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* 3컬럼 레이아웃 */
+    .three-column {
+      display: grid;
+      grid-template-columns: 200px 320px 1fr;
+      height: 100%;
+    }
+
+    .column {
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column:last-child {
+      border-right: none;
+      background: #f8fafc;
+    }
+
+    .column-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .column-header-with-back {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .back-btn:hover {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .column-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .column-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .column-body {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* 대분류 (1열) */
+    .category-item {
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .category-item:hover {
+      background: #f8fafc;
+    }
+
+    .category-item.active {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding-left: 17px;
+    }
+
+    .category-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .category-name {
+      font-size: 14px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .category-arrow {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    /* 2열 - 중분류/소분류 */
+    .list-item {
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .list-item:hover {
+      background: #f8fafc;
+    }
+
+    .list-item.active {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding-left: 17px;
+    }
+
+    .list-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-item-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .list-item-sub {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .list-item-arrow {
+      font-size: 12px;
+      color: #94a3b8;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .list-item-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .list-item:hover .list-item-actions {
+      opacity: 1;
+    }
+
+    .btn-icon {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+    }
+
+    .btn-icon:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-icon.danger:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* 추가 버튼 */
+    .add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 20px;
+      background: #f8fafc;
+      border: none;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .add-btn:hover {
+      background: #eff6ff;
+      color: #3b82f6;
+    }
+
+    /* 3열 - 템플릿 상세 */
+    .detail-container {
+      padding: 24px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .detail-meta {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    /* 변수 선택 영역 */
+    .variable-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .variable-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+
+    .variable-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .variable-option {
+      padding: 8px 14px;
+      background: #f1f5f9;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .variable-option:hover {
+      background: #e2e8f0;
+    }
+
+    .variable-option.active {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .variable-add {
+      padding: 8px 14px;
+      background: #fff;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+
+    .variable-add:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    /* 템플릿 내용 */
+    .template-content-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .template-content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .template-content-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .template-preview {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      min-height: 300px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .template-textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.8;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .template-textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    /* 빈 상태 */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      color: #94a3b8;
+      padding: 40px;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-hint {
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+
+    /* 모달 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 520px;
+      max-height: 85vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      color: #64748b;
+    }
+
+    .modal-close:hover {
+      background: #e2e8f0;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+
+    .confirm-text {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .confirm-highlight {
+      font-weight: 600;
+      color: #dc2626;
+    }
+
+    /* 색상 */
+    .color-change { background: #3b82f6; }
+    .color-add { background: #22c55e; }
+    .color-service { background: #f59e0b; }
+
+    /* 하이라이트 변수 */
+    .highlight-var {
+      background: #fef3c7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      color: #92400e;
+    }
+
+    /* ==================== 인사이트 탭 ==================== */
+    .insight-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .insight-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .insight-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .insight-card-title::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      border-radius: 2px;
+    }
+
+    .insight-card.blue .insight-card-title::before { background: #3b82f6; }
+    .insight-card.red .insight-card-title::before { background: #ef4444; }
+    .insight-card.green .insight-card-title::before { background: #22c55e; }
+
+    .rank-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .rank-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .rank-num {
+      width: 22px;
+      height: 22px;
+      background: #e2e8f0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      margin-right: 12px;
+    }
+
+    .rank-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rank-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .rank-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .rank-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-left: 8px;
+    }
+
+    .improve-item {
+      background: #fef2f2;
+    }
+
+    .improve-item .rank-num {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .improve-item .rank-value {
+      color: #dc2626;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat-box {
+      text-align: center;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.green { color: #22c55e; }
+    .stat-value.yellow { color: #f59e0b; }
+
+    .stat-label {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .usage-box {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f0fdf4;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .usage-label {
+      font-size: 12px;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    .usage-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #22c55e;
+    }
+
+    .empty-insight {
+      padding: 20px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    /* VOC 분석 섹션 */
+    .voc-section {
+      margin-top: 20px;
+    }
+
+    .voc-card {
+      width: 100%;
+    }
+
+    .voc-card .insight-card-title::before {
+      background: #8b5cf6;
+    }
+
+    .voc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .voc-item {
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      border-radius: 10px;
+      gap: 10px;
+    }
+
+    .voc-danger {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .voc-warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+    }
+
+    .voc-success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .voc-icon {
+      font-size: 18px;
+    }
+
+    .voc-content {
+      flex: 1;
+    }
+
+    .voc-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .voc-stat {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .voc-action {
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* ==================== 문의 처리 탭 ==================== */
+    .inquiry-column {
+      display: grid;
+      grid-template-columns: 280px 340px 1fr;
+      height: 100%;
+    }
+
+    .inquiry-column.completed-mode {
+      grid-template-columns: 280px 1fr;
+    }
+
+    .inquiry-column.completed-mode .response-column {
+      display: none;
+    }
+
+    .status-tabs {
+      display: flex;
+      padding: 12px;
+      gap: 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .status-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+    }
+
+    .status-tab:hover {
+      background: #e2e8f0;
+    }
+
+    .status-tab.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .inquiry-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+    }
+
+    .inquiry-item:hover {
+      background: #f8fafc;
+    }
+
+    .inquiry-item.active {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding-left: 17px;
+    }
+
+    .inquiry-merchant {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .inquiry-preview {
+      font-size: 13px;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .inquiry-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .inquiry-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-original {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .badge-modified {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .inquiry-detail-container {
+      padding: 24px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .inquiry-detail-header {
+      margin-bottom: 20px;
+    }
+
+    .inquiry-detail-merchant {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .inquiry-detail-date {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .inquiry-detail-content {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .template-recommend {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .template-recommend-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #059669;
+      margin-bottom: 8px;
+    }
+
+    .template-recommend-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #065f46;
+    }
+
+    .template-recommend-keywords {
+      font-size: 12px;
+      color: #10b981;
+      margin-top: 4px;
+    }
+
+    .no-template-box {
+      padding: 16px;
+      background: #fef3c7;
+      border-radius: 12px;
+      font-size: 13px;
+      color: #92400e;
+    }
+
+    .response-container {
+      padding: 20px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .template-picker {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .tpl-picker-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .tpl-step {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .tpl-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .tpl-step-arrow {
+      color: #94a3b8;
+      font-size: 11px;
+      margin-right: 2px;
+    }
+
+    .tpl-chip {
+      padding: 5px 10px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tpl-chip:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .tpl-chip.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    .tpl-chip.small {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .response-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .response-label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .response-textarea {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: vertical;
+      font-family: inherit;
+      min-height: 280px;
+    }
+
+    .textarea-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .textarea-controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .size-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .size-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .response-textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .modify-reason-box {
+      background: #fef3c7;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .modify-reason-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 6px;
+    }
+
+    .modify-reason-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #fcd34d;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .modify-reason-input:focus {
+      outline: none;
+      border-color: #f59e0b;
+    }
+
+    .response-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .response-actions .btn {
+      flex: 1;
+    }
+
+    .compare-section {
+      margin-top: 20px;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+
+    .section-label:first-of-type {
+      margin-top: 0;
+    }
+
+    .compare-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .compare-box {
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .compare-box-original {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .compare-box-modified {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+    }
+
+    .compare-box-label {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .compare-box-label.original { color: #64748b; }
+    .compare-box-label.modified { color: #d97706; }
+
+    .modify-reason-display {
+      margin-top: 12px;
+      padding: 12px;
+      background: #fef3c7;
+      border-radius: 8px;
+    }
+
+    .modify-reason-display-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 4px;
+    }
+
+    .modify-reason-display-text {
+      font-size: 13px;
+      color: #78350f;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>One-Click Response System</h1>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('insight')">인사이트</button>
+      <button class="tab" onclick="switchTab('inquiry')">문의 처리</button>
+      <button class="tab" onclick="switchTab('template')">템플릿 관리</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- 인사이트 탭 -->
+    <div class="tab-content active" id="tab-insight">
+      <div class="insight-container">
+        <div class="insight-grid">
+          <!-- 처리 현황 (왼쪽으로 이동) -->
+          <div class="insight-card green">
+            <h2 class="insight-card-title">처리 현황</h2>
+            <div class="stat-grid">
+              <div class="stat-box">
+                <div class="stat-value blue" id="insight-pending">0</div>
+                <div class="stat-label">대기</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value green" id="insight-completed">0</div>
+                <div class="stat-label">완료</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value green" id="insight-original">0</div>
+                <div class="stat-label">원본 사용</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value yellow" id="insight-modified">0</div>
+                <div class="stat-label">수정 발송</div>
+              </div>
+            </div>
+            <div class="usage-box">
+              <div class="usage-label">원본 사용률</div>
+              <div class="usage-value" id="insight-usage">0%</div>
+            </div>
+          </div>
+
+          <!-- 자주 묻는 문의 -->
+          <div class="insight-card blue">
+            <h2 class="insight-card-title">자주 사용된 템플릿 TOP 5</h2>
+            <div id="insight-top-templates"></div>
+          </div>
+
+          <!-- 수정률 높은 템플릿 -->
+          <div class="insight-card red">
+            <h2 class="insight-card-title">수정률 높은 템플릿</h2>
+            <div id="insight-modify-rate"></div>
+          </div>
+        </div>
+
+        <!-- VOC 분석 & 개선 제안 (2행) -->
+        <div class="voc-section">
+          <div class="insight-card voc-card">
+            <h2 class="insight-card-title">📊 VOC 분석 & 개선 제안 (예시)</h2>
+            <div class="voc-grid" id="voc-analysis">
+              <div class="voc-item voc-danger">
+                <div class="voc-icon">🔴</div>
+                <div class="voc-content">
+                  <div class="voc-title">"정산 지연" 문의 급증</div>
+                  <div class="voc-stat">+150% (이번 주)</div>
+                </div>
+                <div class="voc-action">→ 정산 일정 사전 안내 필요</div>
+              </div>
+              <div class="voc-item voc-warning">
+                <div class="voc-icon">🟡</div>
+                <div class="voc-content">
+                  <div class="voc-title">"서류 재업로드" 템플릿 수정률 높음</div>
+                  <div class="voc-stat">67% 수정</div>
+                </div>
+                <div class="voc-action">→ 템플릿 내용 개선 필요</div>
+              </div>
+              <div class="voc-item voc-success">
+                <div class="voc-icon">🟢</div>
+                <div class="voc-content">
+                  <div class="voc-title">"간편결제 추가" 원본 사용률 우수</div>
+                  <div class="voc-stat">95% 원본 사용</div>
+                </div>
+                <div class="voc-action">→ 템플릿 품질 우수</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 문의 처리 탭 -->
+    <div class="tab-content" id="tab-inquiry">
+      <div class="inquiry-column">
+        <!-- 1열: 문의 목록 -->
+        <div class="column">
+          <div class="column-header">
+            <div class="column-title">문의 목록</div>
+          </div>
+          <div class="status-tabs">
+            <button class="status-tab active" onclick="filterInquiry('pending', this)">대기 <span id="pendingCount">8</span></button>
+            <button class="status-tab" onclick="filterInquiry('completed', this)">완료 <span id="completedCount">3</span></button>
+          </div>
+          <div class="column-body" id="inquiryList"></div>
+        </div>
+
+        <!-- 2열: 문의 상세 -->
+        <div class="column" style="background: #fff;">
+          <div id="inquiryDetail">
+            <div class="empty-state">
+              <div class="empty-state-icon">📥</div>
+              <div class="empty-state-text">문의를 선택해주세요</div>
+              <div class="empty-state-hint">좌측 목록에서 문의를 선택하면 상세 내용이 표시됩니다</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3열: 응답 작성 -->
+        <div class="column response-column" style="background: #f8fafc;">
+          <div id="responseArea">
+            <div class="empty-state">
+              <div class="empty-state-icon">✏️</div>
+              <div class="empty-state-text">응답 작성</div>
+              <div class="empty-state-hint">문의를 선택하면 템플릿이 추천됩니다</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 템플릿 관리 탭 -->
+    <div class="tab-content" id="tab-template">
+      <div class="three-column">
+        <!-- 1열: 대분류 -->
+        <div class="column">
+          <div class="column-header">
+            <div class="column-title">문의 유형</div>
+          </div>
+          <div class="column-body" id="largeCategory"></div>
+        </div>
+
+        <!-- 2열: 중분류 또는 소분류 -->
+        <div class="column">
+          <div class="column-header" id="middleHeader">
+            <div class="column-title">유형 선택</div>
+            <div class="column-subtitle">대분류를 선택하세요</div>
+          </div>
+          <div class="column-body" id="middleList"></div>
+        </div>
+
+        <!-- 3열: 템플릿 상세 -->
+        <div class="column">
+          <div id="templateDetail">
+            <div class="empty-state">
+              <div class="empty-state-icon">📄</div>
+              <div class="empty-state-text">템플릿을 선택해주세요</div>
+              <div class="empty-state-hint">좌측에서 템플릿을 선택하면 내용이 표시됩니다</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 템플릿 추가/수정 모달 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title" id="editModalTitle">템플릿 추가</span>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">템플릿 이름</label>
+          <input type="text" class="form-input" id="editName" placeholder="예: 회사명 변경">
+        </div>
+        <div class="form-group">
+          <label class="form-label">키워드</label>
+          <input type="text" class="form-input" id="editKeywords" placeholder="예: 회사명, 상호, 변경">
+          <p class="form-hint">쉼표(,)로 구분하여 입력하세요</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">템플릿 내용</label>
+          <textarea class="template-textarea" id="editContent" placeholder="안녕하세요, {merchantName} 담당자님."></textarea>
+          <p class="form-hint">{merchantName}은 가맹점명으로 자동 치환됩니다</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
+        <button class="btn btn-primary" onclick="saveTemplate()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="width: 400px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title">템플릿 삭제</span>
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-text">
+          <span class="confirm-highlight" id="deleteTemplateName"></span> 템플릿을 삭제하시겠습니까?<br><br>
+          삭제된 템플릿은 복구할 수 없습니다.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">취소</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 변수 옵션 추가 모달 -->
+  <div class="modal-overlay" id="addVariableModal">
+    <div class="modal" style="width: 400px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span class="modal-title">옵션 추가</span>
+        <button class="modal-close" onclick="closeAddVariableModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">새 옵션 이름</label>
+          <input type="text" class="form-input" id="newVariableInput" placeholder="예: 네이버페이">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddVariableModal()">취소</button>
+        <button class="btn btn-primary" onclick="confirmAddVariable()">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 데이터 구조
+    let templateData = {
+      change: {
+        name: '변경계약',
+        color: 'color-change',
+        subCategories: {
+          representative: {
+            name: '상호명 및 대표자 변경',
+            templates: [
+              { id: 1, name: '회사명 변경', keywords: ['회사명', '상호', '변경'], content: '안녕하세요, {merchantName} 담당자님.\n\n회사명 변경 관련 안내드립니다.\n\n■ 필요 서류\n- 사업자등록증 (변경된 회사명 기재)\n- 법인등기사항전부증명서 (법인인 경우)\n\n■ 제출 방법\n상점관리자 > 회사정보 > 변경 버튼 클릭 후 서류 업로드\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 2, name: '사업장 주소 변경', keywords: ['주소', '이전', '사업장'], content: '안녕하세요, {merchantName} 담당자님.\n\n사업장 주소 변경 관련 안내드립니다.\n\n■ 필요 서류\n- 사업자등록증 (변경된 주소 기재)\n\n■ 제출 방법\n상점관리자 > 회사정보 > 변경 버튼 클릭 후 서류 업로드\n\n■ 처리 기간\n심사에 1-2 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 3, name: '업태/종목 변경', keywords: ['업태', '종목', '업종'], content: '안녕하세요, {merchantName} 담당자님.\n\n업태/종목 변경 관련 안내드립니다.\n\n■ 필요 서류\n- 사업자등록증 (변경된 업태/종목 기재)\n\n■ 유의사항\n- 고위험 업종으로 변경 시 추가 심사가 필요할 수 있습니다.\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 4, name: '홈페이지 URL 변경', keywords: ['홈페이지', 'URL', '사이트'], content: '안녕하세요, {merchantName} 담당자님.\n\n홈페이지 URL 변경 관련 안내드립니다.\n\n■ 변경 방법\n상점관리자 > 회사정보 > 홈페이지 URL 수정\n\n■ 유의사항\n- 변경된 URL에서 실제 서비스가 운영 중이어야 합니다.\n\n■ 처리 기간\n심사에 1-2 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 5, name: '연락처 변경', keywords: ['연락처', '전화번호', '핸드폰'], content: '안녕하세요, {merchantName} 담당자님.\n\n연락처 변경 관련 안내드립니다.\n\n■ 변경 방법\n상점관리자 > 회사정보 > 연락처 수정\n\n별도 심사 없이 즉시 반영됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 6, name: '대표자 정보 변경', keywords: ['대표자', '대표', '변경'], content: '안녕하세요, {merchantName} 담당자님.\n\n대표자 정보 변경 관련 안내드립니다.\n\n■ 필요 서류 (최근 3개월 이내 발급)\n- 법인등기사항전부증명서\n- 법인인감증명서\n- 신규 대표자 신분증 사본\n\n■ 제출 방법\n상점관리자 > 회사정보 > 변경 버튼 클릭 후 서류 업로드\n\n■ 처리 기간\n자금세탁방지(AML) 확인이 필요하여 심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          }
+        }
+      },
+      add: {
+        name: '추가/변경계약',
+        color: 'color-add',
+        subCategories: {
+          payment: {
+            name: '결제수단',
+            templates: [
+              { id: 7, name: '기본 결제 패키지 추가', keywords: ['기본', '결제', '패키지'], content: '안녕하세요, {merchantName} 담당자님.\n\n기본 결제 패키지 추가 관련 안내드립니다.\n\n■ 포함 결제수단\n- 신용카드, 계좌이체, 가상계좌\n\n■ 신청 방법\n상점관리자 > 결제수단 > 기본 결제 패키지 신청\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 8, name: '브랜드페이 추가', keywords: ['브랜드페이', '브랜드'], content: '안녕하세요, {merchantName} 담당자님.\n\n브랜드페이 추가 관련 안내드립니다.\n\n■ 브랜드페이란?\n- 가맹점 자체 간편결제 서비스 구축\n\n■ 신청 방법\n상점관리자 > 결제수단 > 브랜드페이 신청\n\n■ 처리 기간\n기술 검토 포함 5-7 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 9, name: '빌링(정기결제) 추가', keywords: ['빌링', '정기결제', '구독'], content: '안녕하세요, {merchantName} 담당자님.\n\n빌링(정기결제) 추가 관련 안내드립니다.\n\n■ 빌링이란?\n- 구독형 서비스를 위한 자동 결제\n\n■ 신청 방법\n상점관리자 > 결제수단 > 빌링 신청\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 10, name: '해외 결제 추가', keywords: ['해외', '외국', '글로벌'], content: '안녕하세요, {merchantName} 담당자님.\n\n해외 결제 추가 관련 안내드립니다.\n\n■ 지원 결제수단\n- 해외 신용카드 (VISA, MasterCard 등)\n\n■ 처리 기간\n심사에 3-5 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 11, name: '지급대행 추가', keywords: ['지급대행', '정산'], content: '안녕하세요, {merchantName} 담당자님.\n\n지급대행 서비스 추가 관련 안내드립니다.\n\n■ 지급대행이란?\n- 플랫폼 사업자를 위한 셀러 정산 서비스\n\n■ 필요 서류\n- 사업자등록증\n- 플랫폼 서비스 소개서\n\n■ 처리 기간\n심사에 5-7 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          },
+          simple: {
+            name: '간편결제',
+            hasVariable: true,
+            variableName: '간편결제명',
+            variableOptions: ['SSG페이', '페이코', 'Lpay', '카카오페이', '토스페이', '애플페이', '삼성페이', '네이버페이'],
+            templates: [
+              { 
+                id: 12, 
+                name: '간편결제 추가', 
+                keywords: ['간편결제', '페이', '추가'], 
+                content: '안녕하세요, {merchantName} 담당자님.\n\n{간편결제명} 추가 관련 안내드립니다.\n\n■ 신청 방법\n상점관리자 > 결제수단 > 간편결제 > {간편결제명} 신청\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+                variable: '간편결제명'
+              },
+            ]
+          },
+          mid: {
+            name: '상점아이디(MID)',
+            templates: [
+              { id: 13, name: 'MID 추가', keywords: ['MID', '아이디', '추가'], content: '안녕하세요, {merchantName} 담당자님.\n\nMID 추가 관련 안내드립니다.\n\n■ 신청 방법\nsupport@tosspayments.com 으로 메일 문의\n\n■ 유의사항\n- 상점아이디는 총 14자 이내로 생성 가능합니다.\n- 동일 사업자 내에서만 MID 추가가 가능합니다.\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 14, name: 'MID 변경', keywords: ['MID', '아이디', '변경'], content: '안녕하세요, {merchantName} 담당자님.\n\nMID 변경 관련 안내드립니다.\n\n■ 신청 방법\nsupport@tosspayments.com 으로 메일 문의\n\n■ 필요 정보\n- 기존 MID\n- 변경 희망 MID (14자 이내)\n- 변경 사유\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 15, name: 'MID 해지', keywords: ['MID', '아이디', '해지'], content: '안녕하세요, {merchantName} 담당자님.\n\nMID 해지 관련 안내드립니다.\n\n■ 신청 방법\nsupport@tosspayments.com 으로 메일 문의\n\n■ 필요 정보\n- 해지 희망 MID\n- 해지 사유\n- 해지 희망일\n\n■ 유의사항\n- 미정산 건이 있는 경우 정산 완료 후 해지 가능합니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          }
+        }
+      },
+      service: {
+        name: '서비스문의',
+        color: 'color-service',
+        subCategories: {
+          contract: {
+            name: '계약',
+            templates: [
+              { id: 16, name: '해외결제 가상계좌/계좌이체 가능 여부', keywords: ['해외', '가상계좌', '계좌이체'], content: '안녕하세요, {merchantName} 담당자님.\n\n해외결제 관련 안내드립니다.\n\n현재 해외결제는 카드결제만 제공하고 있습니다.\n\n해외 거주를 하면서 한국 계좌로 결제하는 것은 가능하나, 해외 계좌로 계좌이체 결제는 불가합니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 17, name: '전자계약 외 서면계약 가능 여부', keywords: ['서면계약', '전자계약'], content: '안녕하세요, {merchantName} 담당자님.\n\n서면계약 관련 안내드립니다.\n\n전자계약이 어려우신 경우 고객센터(1544-7772)로 문의주시면 서면계약을 안내드립니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 18, name: '사업자 상이 시 MID 추가 가능 여부', keywords: ['사업자', '상이', 'MID'], content: '안녕하세요, {merchantName} 담당자님.\n\n사업자 상이 시 MID 추가 관련 안내드립니다.\n\n사업자가 상이한 경우 MID 추가는 불가하며, 신규계약이 필요합니다.\n\n신규계약 진행을 원하시면 안내드리겠습니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 19, name: '서류 잘못 업로드 시 수정 방법', keywords: ['서류', '잘못', '수정'], content: '안녕하세요, {merchantName} 담당자님.\n\n서류 수정 관련 안내드립니다.\n\n서류 미비사항이 있는 경우, 계약팀에서 심사 이후 미비사항을 알림톡으로 전달드립니다.\n\n안내를 확인하시고 서류를 새롭게 준비해주세요.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 20, name: '회사 정보 변경 시 필요 서류', keywords: ['회사', '정보', '변경', '서류'], content: '안녕하세요, {merchantName} 담당자님.\n\n회사 정보 변경 시 필요 서류 안내드립니다.\n\n변경할 정보에 따라 서류 첨부가 필요할 수 있으며, 심사에 2~3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 21, name: '3개월 이내 발급본 필수 여부', keywords: ['3개월', '발급', '서류'], content: '안녕하세요, {merchantName} 담당자님.\n\n서류 발급일 관련 안내드립니다.\n\n3개월 이내 발급본이 아닌 서류는 접수가 불가합니다.\n\n3개월 이내 최신 발급본을 준비해주세요.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          },
+          settlement: {
+            name: '정산',
+            templates: [
+              { id: 23, name: '정산 지연 문의', keywords: ['정산', '지연', '안들어'], content: '안녕하세요, {merchantName} 담당자님.\n\n정산 지연 관련 확인드립니다.\n\n현재 확인 중이며, 확인 완료 후 별도 안내드리겠습니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 24, name: '정산 금액 이상 문의', keywords: ['정산', '금액', '이상'], content: '안녕하세요, {merchantName} 담당자님.\n\n정산 금액 관련 안내드립니다.\n\n정산 금액은 결제 금액에서 수수료와 취소 건이 차감된 금액입니다.\n\n■ 확인 방법\n상점관리자 > 정산 > 정산내역 조회\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 25, name: '정산 보류 사유 확인', keywords: ['정산', '보류', '사유'], content: '안녕하세요, {merchantName} 담당자님.\n\n정산 보류 관련 안내드립니다.\n\n일반적인 보류 사유:\n- 정산한도 초과\n- 서류 미비\n- 리스크 검토 중\n\n■ 확인 방법\n상점관리자 > 정산 > 정산현황\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 26, name: '정산 내역 확인 방법', keywords: ['정산', '내역', '확인'], content: '안녕하세요, {merchantName} 담당자님.\n\n정산 내역 확인 방법 안내드립니다.\n\n■ 확인 경로\n상점관리자 > 정산 > 정산내역 조회\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          },
+          fee: {
+            name: '수수료',
+            templates: [
+              { id: 27, name: '수수료 확인 방법', keywords: ['수수료', '확인'], content: '안녕하세요, {merchantName} 담당자님.\n\n수수료 확인 방법 안내드립니다.\n\n■ 확인 경로\n상점관리자 > 이용정보 > 해당 MID 설정 > 수수료 탭\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 28, name: '수수료율 변경 요청', keywords: ['수수료', '변경', '인하'], content: '안녕하세요, {merchantName} 담당자님.\n\n수수료율 변경 관련 안내드립니다.\n\n수수료율 변경은 영업 담당자를 통해 협의 가능합니다.\n\n담당 영업팀에 연결해드릴까요?\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 29, name: '수수료 계산 방법', keywords: ['수수료', '계산'], content: '안녕하세요, {merchantName} 담당자님.\n\n수수료 계산 방법 안내드립니다.\n\n■ 계산 공식\n수수료 = 결제금액 × 수수료율\n정산금액 = 결제금액 - 수수료 - 취소금액\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          },
+          tech: {
+            name: '기술',
+            templates: [
+              { id: 30, name: '결제 오류 문의', keywords: ['결제', '오류', '실패'], content: '안녕하세요, {merchantName} 담당자님.\n\n결제 오류 관련 확인드립니다.\n\n■ 확인 필요 정보\n- 오류 발생 일시\n- 오류 메시지\n- 결제 수단\n\n위 정보를 알려주시면 기술팀에서 확인 후 안내드리겠습니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 31, name: '취소/환불 오류 문의', keywords: ['취소', '환불', '오류'], content: '안녕하세요, {merchantName} 담당자님.\n\n취소/환불 오류 관련 안내드립니다.\n\n일반적인 오류 원인:\n- 부분 취소 불가 결제 수단\n- 취소 가능 기간 초과\n- 이미 취소된 거래\n\n거래 정보를 알려주시면 확인 후 안내드리겠습니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 32, name: 'API 연동 문의', keywords: ['API', '연동', '개발'], content: '안녕하세요, {merchantName} 담당자님.\n\nAPI 연동 관련 안내드립니다.\n\n■ 개발 문서\nhttps://docs.tosspayments.com\n\n■ 기술 지원\nsupport@tosspayments.com\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+              { id: 33, name: '테스트 환경 문의', keywords: ['테스트', '샌드박스'], content: '안녕하세요, {merchantName} 담당자님.\n\n테스트 환경 관련 안내드립니다.\n\n■ 테스트 API 키\n상점관리자 > 개발정보 > 테스트 API 키 확인\n\n■ 테스트 카드번호\ndocs.tosspayments.com 에서 확인 가능합니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.' },
+            ]
+          }
+        }
+      }
+    };
+
+    // 상태 관리
+    let currentTab = 'insight';
+    let selectedLargeCategory = null;
+    let selectedMediumCategory = null;
+    let selectedTemplate = null;
+    let selectedVariableOption = null;
+    let viewMode = 'medium'; // 'medium' or 'template'
+    let editMode = null;
+    let deleteTargetId = null;
+    let nextId = 34;
+    let isEditing = false;
+    // 문의 처리 상태
+    let currentInquiryStatus = 'pending';
+    let selectedInquiry = null;
+    let originalTemplate = '';
+
+    // 문의 데이터
+    let inquiries = [
+      { id: 1, merchant: '(주)커머스코리아', content: '서류를 잘못 올렸는데 어떻게 수정하나요?', date: '12-15 14:30', status: 'pending' },
+      { id: 2, merchant: '스마트스토어', content: '정산이 아직 안 들어왔어요. 확인 부탁드립니다.', date: '12-15 13:20', status: 'pending' },
+      { id: 3, merchant: '(주)테크솔루션', content: '카카오페이 추가하고 싶습니다', date: '12-15 11:45', status: 'pending' },
+      { id: 4, merchant: '온라인마켓', content: '대표자가 변경되었습니다. 어떻게 해야하나요?', date: '12-15 10:30', status: 'pending' },
+      { id: 5, merchant: '(주)글로벌트레이드', content: '수수료 확인은 어디서 하나요?', date: '12-14 17:20', status: 'pending' },
+      { id: 6, merchant: '패션몰', content: 'MID 추가 요청드립니다', date: '12-14 15:10', status: 'pending' },
+      { id: 7, merchant: '(주)푸드테크', content: '심사가 얼마나 걸리나요?', date: '12-14 14:00', status: 'pending' },
+      { id: 8, merchant: '리빙플러스', content: '정기결제 기능 추가하려고요', date: '12-14 11:30', status: 'pending' },
+    ];
+
+    let completedInquiries = [
+      { 
+        id: 101, merchant: '(주)이커머스', content: '토스페이 추가 문의', date: '12-13', status: 'completed', wasModified: false,
+        templateUsed: '간편결제 추가',
+        originalContent: '안녕하세요, (주)이커머스 담당자님.\n\n토스페이 추가 관련 안내드립니다.\n\n■ 신청 방법\n상점관리자 > 결제수단 > 간편결제 > 토스페이 신청\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+        finalContent: '안녕하세요, (주)이커머스 담당자님.\n\n토스페이 추가 관련 안내드립니다.\n\n■ 신청 방법\n상점관리자 > 결제수단 > 간편결제 > 토스페이 신청\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+        modifyReason: ''
+      },
+      { 
+        id: 102, merchant: '베스트셀러', content: '정산 지연 문의', date: '12-13', status: 'completed', wasModified: true,
+        templateUsed: '정산 지연 문의',
+        originalContent: '안녕하세요, 베스트셀러 담당자님.\n\n정산 지연 관련 확인드립니다.\n\n현재 확인 중이며, 확인 완료 후 별도 안내드리겠습니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+        finalContent: '안녕하세요, 베스트셀러 담당자님.\n\n정산 지연 관련 확인드립니다.\n\n확인 결과, 정산한도 초과로 인해 보류 중입니다.\n\n■ 해결 방법\n- 최근 3개월 매출 증빙\n- 사업자 통장 사본\n\n서류 제출 후 1-2 영업일 내 정산 재개됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+        modifyReason: '정산한도 초과 관련 구체적 해결 방법 추가'
+      },
+      { 
+        id: 103, merchant: '(주)디지털허브', content: '회사명 변경', date: '12-12', status: 'completed', wasModified: false,
+        templateUsed: '회사명 변경',
+        originalContent: '안녕하세요, (주)디지털허브 담당자님.\n\n회사명 변경 관련 안내드립니다.\n\n■ 필요 서류\n- 사업자등록증 (변경된 회사명 기재)\n- 법인등기사항전부증명서 (법인인 경우)\n\n■ 제출 방법\n상점관리자 > 회사정보 > 변경 버튼 클릭 후 서류 업로드\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+        finalContent: '안녕하세요, (주)디지털허브 담당자님.\n\n회사명 변경 관련 안내드립니다.\n\n■ 필요 서류\n- 사업자등록증 (변경된 회사명 기재)\n- 법인등기사항전부증명서 (법인인 경우)\n\n■ 제출 방법\n상점관리자 > 회사정보 > 변경 버튼 클릭 후 서류 업로드\n\n■ 처리 기간\n심사에 2-3 영업일 소요됩니다.\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.',
+        modifyReason: ''
+      },
+    ];
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      renderLargeCategories();
+      renderMiddleColumn();
+      renderInquiryList();
+      renderInsight();
+    });
+
+    // ==================== 인사이트 ====================
+    function renderInsight() {
+      // 처리 현황
+      const pending = inquiries.length;
+      const completed = completedInquiries.length;
+      const original = completedInquiries.filter(inq => !inq.wasModified).length;
+      const modified = completedInquiries.filter(inq => inq.wasModified).length;
+      
+      document.getElementById('insight-pending').textContent = pending;
+      document.getElementById('insight-completed').textContent = completed;
+      document.getElementById('insight-original').textContent = original;
+      document.getElementById('insight-modified').textContent = modified;
+      
+      // 원본 사용률
+      const usageRate = completed > 0 ? Math.round((original / completed) * 100) : 0;
+      document.getElementById('insight-usage').textContent = usageRate + '%';
+      
+      // 자주 사용된 템플릿 TOP 5
+      const templateCount = {};
+      completedInquiries.forEach(inq => {
+        if (inq.templateUsed && inq.templateUsed !== '직접 작성') {
+          templateCount[inq.templateUsed] = (templateCount[inq.templateUsed] || 0) + 1;
+        }
+      });
+      
+      const topTemplates = Object.entries(templateCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+      
+      const topContainer = document.getElementById('insight-top-templates');
+      if (topTemplates.length === 0) {
+        topContainer.innerHTML = '<div class="empty-insight">아직 데이터가 없습니다</div>';
+      } else {
+        topContainer.innerHTML = topTemplates.map(([name, count], idx) => `
+          <div class="rank-item">
+            <span class="rank-num">${idx + 1}</span>
+            <div class="rank-info">
+              <div class="rank-name">${name}</div>
+            </div>
+            <span class="rank-value">${count}건</span>
+          </div>
+        `).join('');
+      }
+      
+      // 수정률 높은 템플릿
+      const templateStats = {};
+      completedInquiries.forEach(inq => {
+        if (inq.templateUsed && inq.templateUsed !== '직접 작성') {
+          if (!templateStats[inq.templateUsed]) {
+            templateStats[inq.templateUsed] = { total: 0, modified: 0 };
+          }
+          templateStats[inq.templateUsed].total++;
+          if (inq.wasModified) {
+            templateStats[inq.templateUsed].modified++;
+          }
+        }
+      });
+      
+      const modifyRates = Object.entries(templateStats)
+        .map(([name, stats]) => ({
+          name,
+          total: stats.total,
+          modified: stats.modified,
+          rate: Math.round((stats.modified / stats.total) * 100)
+        }))
+        .filter(item => item.modified > 0)
+        .sort((a, b) => b.rate - a.rate)
+        .slice(0, 5);
+      
+      const modifyContainer = document.getElementById('insight-modify-rate');
+      if (modifyRates.length === 0) {
+        modifyContainer.innerHTML = '<div class="empty-insight">수정된 응답이 없습니다</div>';
+      } else {
+        modifyContainer.innerHTML = modifyRates.map((item, idx) => `
+          <div class="rank-item improve-item">
+            <span class="rank-num">${idx + 1}</span>
+            <div class="rank-info">
+              <div class="rank-name">${item.name}</div>
+              <div class="rank-sub">${item.total}건 중 ${item.modified}건 수정</div>
+            </div>
+            <span class="rank-value">${item.rate}%</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 탭 전환
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // 1열: 대분류 렌더링
+    function renderLargeCategories() {
+      const container = document.getElementById('largeCategory');
+      
+      container.innerHTML = Object.entries(templateData).map(([key, cat]) => `
+        <div class="category-item ${selectedLargeCategory === key ? 'active' : ''}" onclick="selectLargeCategory('${key}')">
+          <span class="category-dot ${cat.color}"></span>
+          <span class="category-name">${cat.name}</span>
+          <span class="category-arrow">▶</span>
+        </div>
+      `).join('');
+    }
+
+    // 대분류 선택
+    function selectLargeCategory(key) {
+      selectedLargeCategory = key;
+      selectedMediumCategory = null;
+      selectedTemplate = null;
+      selectedVariableOption = null;
+      viewMode = 'medium';
+      isEditing = false;
+      
+      renderLargeCategories();
+      renderMiddleColumn();
+      renderTemplateDetail();
+    }
+
+    // 2열: 중간 컬럼 렌더링 (중분류 또는 소분류)
+    function renderMiddleColumn() {
+      const header = document.getElementById('middleHeader');
+      const list = document.getElementById('middleList');
+
+      if (!selectedLargeCategory) {
+        header.innerHTML = `
+          <div class="column-title">유형 선택</div>
+          <div class="column-subtitle">대분류를 선택하세요</div>
+        `;
+        list.innerHTML = `
+          <div class="empty-state" style="height: auto; padding: 60px 20px;">
+            <div class="empty-state-text">대분류를 선택해주세요</div>
+          </div>
+        `;
+        return;
+      }
+
+      const largeCat = templateData[selectedLargeCategory];
+
+      if (viewMode === 'medium') {
+        // 중분류 목록 표시
+        header.innerHTML = `
+          <div class="column-title">${largeCat.name}</div>
+          <div class="column-subtitle">${Object.keys(largeCat.subCategories).length}개의 하위 유형</div>
+        `;
+
+        list.innerHTML = Object.entries(largeCat.subCategories).map(([key, subCat]) => `
+          <div class="list-item" onclick="selectMediumCategory('${key}')">
+            <div class="list-item-content">
+              <div class="list-item-title">${subCat.name}</div>
+              <div class="list-item-sub">${subCat.templates.length}개의 템플릿</div>
+            </div>
+            <span class="list-item-arrow">▶</span>
+          </div>
+        `).join('');
+
+      } else {
+        // 소분류(템플릿) 목록 표시
+        const mediumCat = largeCat.subCategories[selectedMediumCategory];
+
+        header.innerHTML = `
+          <div class="column-header-with-back">
+            <button class="back-btn" onclick="goBackToMedium()">← 이전</button>
+            <div>
+              <div class="column-title">${mediumCat.name}</div>
+              <div class="column-subtitle">${mediumCat.templates.length}개의 템플릿</div>
+            </div>
+          </div>
+        `;
+
+        list.innerHTML = `
+          ${mediumCat.templates.map(t => `
+            <div class="list-item ${selectedTemplate?.id === t.id ? 'active' : ''}" onclick="selectTemplate(${t.id})">
+              <div class="list-item-content">
+                <div class="list-item-title">${t.name}</div>
+                <div class="list-item-sub">${t.keywords.join(', ')}</div>
+              </div>
+              <div class="list-item-actions">
+                <button class="btn-icon" onclick="openEditModal(${t.id}); event.stopPropagation();" title="수정">✏️</button>
+                <button class="btn-icon danger" onclick="openDeleteModal(${t.id}); event.stopPropagation();" title="삭제">🗑️</button>
+              </div>
+            </div>
+          `).join('')}
+          <button class="add-btn" onclick="openAddModal()">+ 새 템플릿 추가</button>
+        `;
+      }
+    }
+
+    // 중분류 선택 → 소분류로 전환
+    function selectMediumCategory(key) {
+      selectedMediumCategory = key;
+      selectedTemplate = null;
+      selectedVariableOption = null;
+      viewMode = 'template';
+      isEditing = false;
+      
+      renderMiddleColumn();
+      renderTemplateDetail();
+    }
+
+    // 이전으로 (소분류 → 중분류)
+    function goBackToMedium() {
+      selectedMediumCategory = null;
+      selectedTemplate = null;
+      selectedVariableOption = null;
+      viewMode = 'medium';
+      isEditing = false;
+      
+      renderMiddleColumn();
+      renderTemplateDetail();
+    }
+
+    // 템플릿 선택
+    function selectTemplate(id) {
+      const templates = templateData[selectedLargeCategory].subCategories[selectedMediumCategory].templates;
+      selectedTemplate = templates.find(t => t.id === id);
+      selectedVariableOption = null;
+      isEditing = false;
+      
+      // 변수 옵션이 있으면 첫 번째 선택
+      const mediumCat = templateData[selectedLargeCategory].subCategories[selectedMediumCategory];
+      if (mediumCat.hasVariable && mediumCat.variableOptions.length > 0) {
+        selectedVariableOption = mediumCat.variableOptions[0];
+      }
+      
+      renderMiddleColumn();
+      renderTemplateDetail();
+    }
+
+    // 3열: 템플릿 상세 렌더링
+    function renderTemplateDetail() {
+      const container = document.getElementById('templateDetail');
+      
+      if (!selectedTemplate) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📄</div>
+            <div class="empty-state-text">템플릿을 선택해주세요</div>
+            <div class="empty-state-hint">좌측에서 템플릿을 선택하면 내용이 표시됩니다</div>
+          </div>
+        `;
+        return;
+      }
+
+      const mediumCat = templateData[selectedLargeCategory].subCategories[selectedMediumCategory];
+      const hasVariable = mediumCat.hasVariable && selectedTemplate.variable;
+
+      // 변수 치환된 내용
+      let displayContent = selectedTemplate.content;
+      if (hasVariable && selectedVariableOption) {
+        displayContent = displayContent.replace(new RegExp(`{${selectedTemplate.variable}}`, 'g'), selectedVariableOption);
+      }
+
+      container.innerHTML = `
+        <div class="detail-container">
+          <div class="detail-header">
+            <div>
+              <div class="detail-title">${selectedTemplate.name}</div>
+              <div class="detail-meta">키워드: ${selectedTemplate.keywords.join(', ')}</div>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-secondary" onclick="toggleEdit()">
+                ${isEditing ? '취소' : '수정'}
+              </button>
+              ${isEditing ? `<button class="btn btn-primary" onclick="saveInlineEdit()">저장</button>` : ''}
+            </div>
+          </div>
+
+          ${hasVariable ? `
+            <div class="variable-section">
+              <div class="variable-label">📌 ${mediumCat.variableName} 선택</div>
+              <div class="variable-options">
+                ${mediumCat.variableOptions.map(opt => `
+                  <button class="variable-option ${selectedVariableOption === opt ? 'active' : ''}" onclick="selectVariableOption('${opt}')">
+                    ${opt}
+                  </button>
+                `).join('')}
+                <button class="variable-add" onclick="openAddVariableModal()">+ 추가</button>
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="template-content-section">
+            <div class="template-content-header">
+              <div class="template-content-label">템플릿 내용</div>
+            </div>
+            ${isEditing ? `
+              <textarea class="template-textarea" id="inlineEditContent">${selectedTemplate.content}</textarea>
+            ` : `
+              <div class="template-preview">${highlightVariables(displayContent)}</div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // 변수 하이라이트
+    function highlightVariables(content) {
+      return content.replace(/\{([^}]+)\}/g, '<span class="highlight-var">{$1}</span>');
+    }
+
+    // 변수 옵션 선택
+    function selectVariableOption(option) {
+      selectedVariableOption = option;
+      renderTemplateDetail();
+    }
+
+    // 변수 옵션 추가 모달
+    function openAddVariableModal() {
+      document.getElementById('newVariableInput').value = '';
+      document.getElementById('addVariableModal').classList.add('show');
+    }
+
+    function closeAddVariableModal() {
+      document.getElementById('addVariableModal').classList.remove('show');
+    }
+
+    function confirmAddVariable() {
+      const newValue = document.getElementById('newVariableInput').value.trim();
+      if (!newValue) {
+        alert('옵션 이름을 입력해주세요.');
+        return;
+      }
+
+      const mediumCat = templateData[selectedLargeCategory].subCategories[selectedMediumCategory];
+      if (mediumCat.variableOptions.includes(newValue)) {
+        alert('이미 존재하는 옵션입니다.');
+        return;
+      }
+
+      mediumCat.variableOptions.push(newValue);
+      selectedVariableOption = newValue;
+      
+      closeAddVariableModal();
+      renderTemplateDetail();
+      alert(`'${newValue}'가 추가되었습니다.`);
+    }
+
+    // 인라인 수정
+    function toggleEdit() {
+      isEditing = !isEditing;
+      renderTemplateDetail();
+    }
+
+    function saveInlineEdit() {
+      const content = document.getElementById('inlineEditContent').value.trim();
+      if (!content) {
+        alert('템플릿 내용을 입력해주세요.');
+        return;
+      }
+
+      const templates = templateData[selectedLargeCategory].subCategories[selectedMediumCategory].templates;
+      const idx = templates.findIndex(t => t.id === selectedTemplate.id);
+      templates[idx].content = content;
+      selectedTemplate = templates[idx];
+      
+      isEditing = false;
+      renderTemplateDetail();
+      alert('저장되었습니다.');
+    }
+
+    // 추가 모달
+    function openAddModal() {
+      editMode = 'add';
+      document.getElementById('editModalTitle').textContent = '템플릿 추가';
+      document.getElementById('editName').value = '';
+      document.getElementById('editKeywords').value = '';
+      document.getElementById('editContent').value = '안녕하세요, {merchantName} 담당자님.\n\n\n\n추가 문의사항이 있으시면 언제든 연락 주세요.\n감사합니다.';
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    // 수정 모달
+    function openEditModal(id) {
+      editMode = 'edit';
+      const templates = templateData[selectedLargeCategory].subCategories[selectedMediumCategory].templates;
+      const template = templates.find(t => t.id === id);
+      
+      document.getElementById('editModalTitle').textContent = '템플릿 수정';
+      document.getElementById('editName').value = template.name;
+      document.getElementById('editKeywords').value = template.keywords.join(', ');
+      document.getElementById('editContent').value = template.content;
+      document.getElementById('editModal').classList.add('show');
+      
+      selectedTemplate = template;
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+      editMode = null;
+    }
+
+    // 저장
+    function saveTemplate() {
+      const name = document.getElementById('editName').value.trim();
+      const keywords = document.getElementById('editKeywords').value.split(',').map(k => k.trim()).filter(k => k);
+      const content = document.getElementById('editContent').value.trim();
+
+      if (!name) {
+        alert('템플릿 이름을 입력해주세요.');
+        return;
+      }
+      if (keywords.length === 0) {
+        alert('키워드를 입력해주세요.');
+        return;
+      }
+      if (!content) {
+        alert('템플릿 내용을 입력해주세요.');
+        return;
+      }
+
+      const templates = templateData[selectedLargeCategory].subCategories[selectedMediumCategory].templates;
+
+      if (editMode === 'add') {
+        const newTemplate = { id: nextId++, name, keywords, content };
+        templates.push(newTemplate);
+        selectedTemplate = newTemplate;
+        alert('템플릿이 추가되었습니다.');
+      } else {
+        const idx = templates.findIndex(t => t.id === selectedTemplate.id);
+        templates[idx] = { ...templates[idx], name, keywords, content };
+        selectedTemplate = templates[idx];
+        alert('템플릿이 수정되었습니다.');
+      }
+
+      closeEditModal();
+      renderMiddleColumn();
+      renderTemplateDetail();
+    }
+
+    // 삭제 모달
+    function openDeleteModal(id) {
+      const templates = templateData[selectedLargeCategory].subCategories[selectedMediumCategory].templates;
+      const template = templates.find(t => t.id === id);
+      
+      deleteTargetId = id;
+      document.getElementById('deleteTemplateName').textContent = template.name;
+      document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('show');
+      deleteTargetId = null;
+    }
+
+    function confirmDelete() {
+      const templates = templateData[selectedLargeCategory].subCategories[selectedMediumCategory].templates;
+      const idx = templates.findIndex(t => t.id === deleteTargetId);
+      
+      if (idx > -1) {
+        templates.splice(idx, 1);
+        if (selectedTemplate?.id === deleteTargetId) {
+          selectedTemplate = null;
+        }
+        alert('템플릿이 삭제되었습니다.');
+      }
+
+      closeDeleteModal();
+      renderMiddleColumn();
+      renderTemplateDetail();
+    }
+
+    // ==================== 문의 처리 ====================
+    function filterInquiry(status, btn) {
+      currentInquiryStatus = status;
+      selectedInquiry = null;
+      
+      document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // 완료 모드일 때 그리드 변경
+      const inquiryColumn = document.querySelector('.inquiry-column');
+      if (status === 'completed') {
+        inquiryColumn.classList.add('completed-mode');
+      } else {
+        inquiryColumn.classList.remove('completed-mode');
+      }
+      
+      renderInquiryList();
+      renderInquiryDetail();
+      renderResponseArea();
+    }
+
+    function renderInquiryList() {
+      const list = document.getElementById('inquiryList');
+      if (!list) return;
+      
+      const data = currentInquiryStatus === 'pending' ? inquiries : completedInquiries;
+      
+      list.innerHTML = data.map(inq => `
+        <div class="inquiry-item ${selectedInquiry?.id === inq.id ? 'active' : ''}" onclick="selectInquiry(${inq.id})">
+          <div class="inquiry-merchant">${inq.merchant}</div>
+          <div class="inquiry-preview">${inq.content}</div>
+          <div class="inquiry-meta">
+            <span>${inq.date}</span>
+            ${inq.status === 'completed' ? `
+              <span class="inquiry-badge ${inq.wasModified ? 'badge-modified' : 'badge-original'}">
+                ${inq.wasModified ? '수정' : '원본'}
+              </span>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectInquiry(id) {
+      const data = currentInquiryStatus === 'pending' ? inquiries : completedInquiries;
+      selectedInquiry = data.find(inq => inq.id === id);
+      
+      // 템플릿 선택 상태 초기화
+      responseSelectedLarge = null;
+      responseSelectedMedium = null;
+      responseSelectedTemplateId = null;
+      originalTemplate = '';
+      
+      renderInquiryList();
+      renderInquiryDetail();
+      renderResponseArea();
+    }
+
+    function findMatchingTemplate(content) {
+      const lowerContent = content.toLowerCase();
+      let bestMatch = null;
+      let bestScore = 0;
+
+      Object.values(templateData).forEach(largeCat => {
+        Object.values(largeCat.subCategories).forEach(mediumCat => {
+          mediumCat.templates.forEach(t => {
+            let score = 0;
+            let matchedKeywords = 0;
+            
+            t.keywords.forEach(keyword => {
+              if (lowerContent.includes(keyword.toLowerCase())) {
+                score += keyword.length; // 긴 키워드일수록 높은 점수
+                matchedKeywords++;
+              }
+            });
+            
+            // 매칭된 키워드 비율도 고려 (더 정확한 매칭 우선)
+            if (matchedKeywords > 0) {
+              score += (matchedKeywords / t.keywords.length) * 10;
+            }
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestMatch = { ...t, categoryName: mediumCat.name };
+            }
+          });
+        });
+      });
+
+      return bestMatch;
+    }
+
+    function renderInquiryDetail() {
+      const container = document.getElementById('inquiryDetail');
+      if (!container) return;
+      
+      if (!selectedInquiry) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📥</div>
+            <div class="empty-state-text">문의를 선택해주세요</div>
+            <div class="empty-state-hint">좌측 목록에서 문의를 선택하면 상세 내용이 표시됩니다</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentInquiryStatus === 'completed') {
+        container.innerHTML = `
+          <div class="inquiry-detail-container">
+            <div class="inquiry-detail-header">
+              <div class="inquiry-detail-merchant">${selectedInquiry.merchant}</div>
+              <div class="inquiry-detail-date">${selectedInquiry.date} · ${selectedInquiry.wasModified ? '수정 발송' : '원본 사용'}</div>
+            </div>
+            
+            <div class="section-label">📨 문의 내용</div>
+            <div class="inquiry-detail-content">${selectedInquiry.content}</div>
+            
+            <div class="section-label">📋 사용 템플릿: ${selectedInquiry.templateUsed}</div>
+            ${selectedInquiry.wasModified ? `
+              <div class="compare-grid">
+                <div>
+                  <div class="compare-box-label original">원본 템플릿</div>
+                  <div class="compare-box compare-box-original">${selectedInquiry.originalContent}</div>
+                </div>
+                <div>
+                  <div class="compare-box-label modified">수정된 내용</div>
+                  <div class="compare-box compare-box-modified">${selectedInquiry.finalContent}</div>
+                </div>
+              </div>
+              <div class="modify-reason-display">
+                <div class="modify-reason-display-label">수정 사유</div>
+                <div class="modify-reason-display-text">${selectedInquiry.modifyReason}</div>
+              </div>
+            ` : `
+              <div class="compare-box compare-box-original">${selectedInquiry.finalContent}</div>
+            `}
+          </div>
+        `;
+        return;
+      }
+
+      const matchedTemplate = findMatchingTemplate(selectedInquiry.content);
+
+      container.innerHTML = `
+        <div class="inquiry-detail-container">
+          <div class="inquiry-detail-header">
+            <div class="inquiry-detail-merchant">${selectedInquiry.merchant}</div>
+            <div class="inquiry-detail-date">${selectedInquiry.date}</div>
+          </div>
+          
+          <div class="inquiry-detail-content">${selectedInquiry.content}</div>
+          
+          ${matchedTemplate ? `
+            <div class="template-recommend">
+              <div class="template-recommend-label">✨ 키워드 매칭 추천</div>
+              <div class="template-recommend-name">${matchedTemplate.name}</div>
+              <div class="template-recommend-keywords">${matchedTemplate.categoryName} · ${matchedTemplate.keywords.join(', ')}</div>
+            </div>
+          ` : `
+            <div class="no-template-box">
+              매칭되는 템플릿이 없습니다. 직접 작성하거나 템플릿 관리에서 선택해주세요.
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderResponseArea() {
+      const container = document.getElementById('responseArea');
+      if (!container) return;
+      
+      // 완료된 문의일 때는 3열 숨기기
+      if (currentInquiryStatus === 'completed') {
+        container.parentElement.style.display = 'none';
+        return;
+      } else {
+        container.parentElement.style.display = '';
+      }
+      
+      if (!selectedInquiry) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">✏️</div>
+            <div class="empty-state-text">응답 작성</div>
+            <div class="empty-state-hint">문의를 선택하면 템플릿이 추천됩니다</div>
+          </div>
+        `;
+        return;
+      }
+
+      // 자동 매칭 처리
+      if (!responseSelectedLarge && !responseSelectedMedium && !responseSelectedTemplateId) {
+        const matchedTemplate = findMatchingTemplate(selectedInquiry.content);
+        if (matchedTemplate) {
+          // 매칭된 템플릿의 카테고리 찾기
+          Object.entries(templateData).forEach(([largeKey, largeCat]) => {
+            Object.entries(largeCat.subCategories).forEach(([medKey, medCat]) => {
+              const found = medCat.templates.find(t => t.id === matchedTemplate.id);
+              if (found) {
+                responseSelectedLarge = largeKey;
+                responseSelectedMedium = medKey;
+                responseSelectedTemplateId = found.id;
+                originalTemplate = found.content.replace('{merchantName}', selectedInquiry.merchant);
+              }
+            });
+          });
+        }
+      }
+
+      // 대분류 버튼
+      let largeCatHtml = Object.entries(templateData).map(([key, cat]) => `
+        <button class="tpl-chip ${responseSelectedLarge === key ? 'active' : ''}" onclick="selectResponseLarge('${key}')">
+          ${cat.name}
+        </button>
+      `).join('');
+
+      // 중분류 버튼 (대분류 선택 시)
+      let medCatHtml = '';
+      if (responseSelectedLarge) {
+        const largeCat = templateData[responseSelectedLarge];
+        medCatHtml = `
+          <div class="tpl-step">
+            <span class="tpl-step-arrow">→</span>
+            ${Object.entries(largeCat.subCategories).map(([key, cat]) => `
+              <button class="tpl-chip small ${responseSelectedMedium === key ? 'active' : ''}" onclick="selectResponseMedium('${key}')">
+                ${cat.name}
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // 세부유형 버튼 (중분류 선택 시)
+      let templateListHtml = '';
+      if (responseSelectedLarge && responseSelectedMedium) {
+        const medCat = templateData[responseSelectedLarge].subCategories[responseSelectedMedium];
+        templateListHtml = `
+          <div class="tpl-step">
+            <span class="tpl-step-arrow">→</span>
+            ${medCat.templates.map(t => `
+              <button class="tpl-chip small ${responseSelectedTemplateId === t.id ? 'active' : ''}" onclick="selectResponseTemplate(${t.id})">
+                ${t.name}
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="response-container">
+          <div class="response-header">
+            <span class="response-label">응답 내용</span>
+            <button class="btn btn-secondary btn-small" onclick="resetResponse()">↺ 초기화</button>
+          </div>
+          
+          <div class="template-picker">
+            <div class="tpl-picker-label">📂 템플릿 선택</div>
+            <div class="tpl-step">
+              ${largeCatHtml}
+            </div>
+            ${medCatHtml}
+            ${templateListHtml}
+          </div>
+          
+          <div class="textarea-wrap">
+            <textarea class="response-textarea" id="responseContent" oninput="checkModified()">${originalTemplate}</textarea>
+            <div class="textarea-controls">
+              <button class="size-btn" onclick="resizeTextarea(-100)" title="줄이기">−</button>
+              <button class="size-btn" onclick="resizeTextarea(100)" title="늘리기">+</button>
+            </div>
+          </div>
+          
+          <div class="modify-reason-box" id="modifyReasonBox" style="display: none;">
+            <div class="modify-reason-label">수정 사유</div>
+            <input class="modify-reason-input" id="modifyReason" placeholder="수정 사유를 입력하세요">
+          </div>
+          
+          <div class="response-actions">
+            <button class="btn btn-secondary" onclick="cancelResponse()">취소</button>
+            <button class="btn btn-primary" id="sendBtn" onclick="sendResponse()">발송</button>
+          </div>
+        </div>
+      `;
+      
+      // 수정 여부 체크
+      setTimeout(() => checkModified(), 0);
+    }
+
+    // 응답 영역 템플릿 선택 상태
+    let responseSelectedLarge = null;
+    let responseSelectedMedium = null;
+    let responseSelectedTemplateId = null;
+
+    function selectResponseLarge(key) {
+      responseSelectedLarge = key;
+      responseSelectedMedium = null;
+      responseSelectedTemplateId = null;
+      renderResponseArea();
+    }
+
+    function selectResponseMedium(key) {
+      responseSelectedMedium = key;
+      responseSelectedTemplateId = null;
+      renderResponseArea();
+    }
+
+    function selectResponseTemplate(id) {
+      responseSelectedTemplateId = id;
+      const template = templateData[responseSelectedLarge].subCategories[responseSelectedMedium].templates.find(t => t.id === id);
+      
+      if (template) {
+        let content = template.content.replace('{merchantName}', selectedInquiry.merchant);
+        // 간편결제 변수 처리
+        if (template.variable) {
+          const medCat = templateData[responseSelectedLarge].subCategories[responseSelectedMedium];
+          if (medCat.variableOptions && medCat.variableOptions.length > 0) {
+            content = content.replace(new RegExp(`{${template.variable}}`, 'g'), medCat.variableOptions[0]);
+          }
+        }
+        originalTemplate = content;
+      }
+      renderResponseArea();
+    }
+
+    function onTemplateSelect() {
+      // deprecated - 이제 단계별 선택 사용
+    }
+
+    function checkModified() {
+      const content = document.getElementById('responseContent').value;
+      const modifyBox = document.getElementById('modifyReasonBox');
+      const sendBtn = document.getElementById('sendBtn');
+      
+      if (content !== originalTemplate && originalTemplate !== '') {
+        modifyBox.style.display = 'block';
+        sendBtn.textContent = '수정 후 발송';
+      } else {
+        modifyBox.style.display = 'none';
+        sendBtn.textContent = '발송';
+      }
+    }
+
+    function resetResponse() {
+      // 자동 매칭으로 다시 선택
+      responseSelectedLarge = null;
+      responseSelectedMedium = null;
+      responseSelectedTemplateId = null;
+      originalTemplate = '';
+      renderResponseArea();
+    }
+
+    function resizeTextarea(delta) {
+      const textarea = document.getElementById('responseContent');
+      if (textarea) {
+        const currentHeight = textarea.offsetHeight;
+        const newHeight = Math.max(150, currentHeight + delta);
+        textarea.style.height = newHeight + 'px';
+      }
+    }
+
+    function cancelResponse() {
+      selectedInquiry = null;
+      renderInquiryList();
+      renderInquiryDetail();
+      renderResponseArea();
+    }
+
+    function sendResponse() {
+      const content = document.getElementById('responseContent').value;
+      const isModified = content !== originalTemplate && originalTemplate !== '';
+      const reason = isModified ? document.getElementById('modifyReason').value : '';
+      
+      if (isModified && !reason) {
+        alert('수정 사유를 입력해주세요.');
+        return;
+      }
+      
+      if (!content.trim()) {
+        alert('응답 내용을 입력해주세요.');
+        return;
+      }
+
+      // 완료 목록에 추가
+      const matchedTemplate = findMatchingTemplate(selectedInquiry.content);
+      completedInquiries.unshift({
+        id: Date.now(),
+        merchant: selectedInquiry.merchant,
+        content: selectedInquiry.content,
+        date: new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace('. ', '-').replace('.', ''),
+        status: 'completed',
+        wasModified: isModified,
+        templateUsed: matchedTemplate ? matchedTemplate.name : '직접 작성',
+        originalContent: originalTemplate,
+        finalContent: content,
+        modifyReason: reason
+      });
+
+      alert(`응답이 발송되었습니다.\n\n${isModified ? '(수정 발송 - 사유: ' + reason + ')' : '(원본 사용)'}`);
+      
+      // 대기 목록에서 제거
+      const idx = inquiries.findIndex(inq => inq.id === selectedInquiry.id);
+      if (idx > -1) {
+        inquiries.splice(idx, 1);
+      }
+      
+      selectedInquiry = null;
+      
+      // 카운트 업데이트
+      document.getElementById('pendingCount').textContent = inquiries.length;
+      document.getElementById('completedCount').textContent = completedInquiries.length;
+      
+      renderInquiryList();
+      renderInquiryDetail();
+      renderResponseArea();
+      renderInsight();
+    }
+  </script>
+</body>
+</html>
